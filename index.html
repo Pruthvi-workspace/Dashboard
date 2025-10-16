@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Dashboard — Ambuja vs UltraTech</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/plotly.js@2.27.0/dist/plotly.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.1/dist/css/tabulator.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    #root { padding: 1.125rem; max-width: 1280px; margin: auto; }
+    .select { border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.25rem 0.5rem; width: 260px; background-color: white; }
+    .select:focus { outline: none; ring: 2px #3b82f6; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    // Data from dashboard.py (unchanged)
+    const years = ['Mar-21', 'Mar-22', 'Mar-23', 'Mar-24', 'Mar-25'];
+    const yearNumbers = [2021, 2022, 2023, 2024, 2025];
+    const metricColors = {
+      'Current Ratio': '#1f77b4',
+      'Quick Ratio': '#aec7e8',
+      'Gross Profit Margin': '#2ca02c',
+      'Net Profit Margin': '#98df8a',
+      'Interest Coverage Ratio': '#9467bd',
+      'Inventory Turnover': '#ff7f0e',
+      'Asset Turnover': '#ffbb78',
+      'Trade Receivable Turnover': '#d62728'
+    };
+    const companyColors = {
+      'Ambuja Cements': '#1f77b4',
+      'UltraTech Cement': '#ff7f0e'
+    };
+    const insights = {
+      'Current Ratio': "Ambuja’s 1.62 (’21) to 1.55 (’25) shows solid liquidity, peaking at 2.03 (’24), but recent dip hints at tighter operations. UltraTech’s low 0.37–0.44 signals lean liquidity, risking strain but efficient for capital-heavy cement.",
+      'Quick Ratio': "Ambuja’s 1.41–1.30 (’21–’25) reflects strong immediate liquidity, though declining. UltraTech’s 0.20–0.17 shows vulnerability, prioritizing efficiency over cash reserves.",
+      'Gross Profit Margin': "Ambuja’s volatile 17.46% (’21) to 9.96% (’25) suggests cost pressures, recovering to 14.40% (’24). UltraTech’s robust 56.22%–49.03% showcases superior pricing power and scale.",
+      'Net Profit Margin': "Ambuja improves from 6.25% (’22) to 11.89% (’25), signaling better cost control. UltraTech peaks at 13.69% (’22) but falls to 8.47% (’25), indicating moderated profitability.",
+      'Interest Coverage Ratio': "Ambuja’s strong 37.14–28.46 (’21–’25) reflects low debt risk. UltraTech’s 7.31–6.67 suggests higher leverage but manageable coverage.",
+      'Inventory Turnover': "Ambuja’s 10.58–8.25 (’21–’25) shows slowing inventory movement, risking costs. UltraTech’s 5.59–4.41 (’22–’25) indicates even slower turnover, less efficient.",
+      'Asset Turnover': "Ambuja’s 0.94–0.61 (’21–’25) reflects declining asset efficiency. UltraTech’s 0.86–0.92 (’22–’25) is steadier, slightly outperforming in sales generation.",
+      'Trade Receivable Turnover': "Ambuja’s 48.00–25.00 (’21–’25) signals slower collections, risking cash flow. UltraTech’s 2.54–2.28 (’22–’25) is far slower, highlighting credit leniency."
+    };
+    const ambuja = {
+      'Current Ratio': [1.62, 1.42, 1.96, 2.03, 1.55],
+      'Quick Ratio': [1.41, 1.22, 1.72, 1.79, 1.30],
+      'Gross Profit Margin': [17.46, 8.35, 8.93, 14.40, 9.96],
+      'Net Profit Margin': [9.59, 6.25, 6.63, 10.78, 11.89],
+      'Interest Coverage Ratio': [37.14, 19.33, 21.63, 21.50, 28.46],
+      'Inventory Turnover': [10.58, 9.26, 11.90, 9.19, 8.25],
+      'Asset Turnover': [0.94, 0.95, 1.09, 0.74, 0.61],
+      'Trade Receivable Turnover': [48.00, 36.51, 43.26, 28.01, 25.00]
+    };
+    const ultratech = {
+      'Current Ratio': [0.37, 0.39, 0.42, 0.43, 0.44],
+      'Quick Ratio': [0.20, 0.14, 0.17, 0.15, 0.17],
+      'Gross Profit Margin': [56.22, 50.97, 45.01, 48.87, 49.03],
+      'Net Profit Margin': [12.30, 13.69, 7.86, 9.97, 8.47],
+      'Interest Coverage Ratio': [7.31, 11.37, 10.62, 11.71, 6.67],
+      'Inventory Turnover': [null, 5.59, 6.00, 4.97, 4.41],
+      'Asset Turnover': [null, 0.86, 1.01, 1.07, 0.92],
+      'Trade Receivable Turnover': [null, 2.54, 2.58, 2.55, 2.28]
+    };
+    const metricGroups = {
+      'liquidity': ['Current Ratio', 'Quick Ratio'],
+      'profitability': ['Gross Profit Margin', 'Net Profit Margin'],
+      'turnover': ['Inventory Turnover', 'Asset Turnover', 'Trade Receivable Turnover'],
+      'leverage': ['Interest Coverage Ratio']
+    };
+
+    // Build data array (unchanged)
+    const data = [];
+    years.forEach((y, i) => {
+      Object.entries(ambuja).forEach(([k, v]) => {
+        data.push({ Company: 'Ambuja Cements', Metric: k, Value: v[i], YearLabel: y, Year: yearNumbers[i] });
+      });
+      Object.entries(ultratech).forEach(([k, v]) => {
+        data.push({ Company: 'UltraTech Cement', Metric: k, Value: v[i], YearLabel: y, Year: yearNumbers[i] });
+      });
+    });
+
+    // Helper to get latest KPI (unchanged)
+    function kpiLatest(company, metric) {
+      const sub = data.filter(d => d.Company === company && d.Metric === metric);
+      if (!sub.length) return null;
+      return sub.sort((a, b) => a.Year - b.Year)[sub.length - 1].Value;
+    }
+
+    // Main React component
+    function App() {
+      const [company, setCompany] = React.useState('Both');
+      const [metricGroup, setMetricGroup] = React.useState('liquidity');
+      const [yearRange, setYearRange] = React.useState([2021, 2025]);
+      const sliderRef = React.useRef(null);
+
+      // Initialize noUiSlider
+      React.useEffect(() => {
+        const slider = sliderRef.current;
+        noUiSlider.create(slider, {
+          start: [2021, 2025],
+          connect: true,
+          step: 1,
+          range: { min: 2021, max: 2025 },
+          format: { to: value => Math.round(value), from: value => value },
+          tooltips: [true, true],
+          pips: { mode: 'values', values: yearNumbers, density: 20 }
+        });
+        slider.noUiSlider.on('update', values => setYearRange(values.map(Number)));
+        return () => slider.noUiSlider.destroy();
+      }, []);
+
+      // Filter data (unchanged)
+      const metrics = metricGroups[metricGroup];
+      const filteredData = data.filter(d => metrics.includes(d.Metric) && d.Year >= yearRange[0] && d.Year <= yearRange[1]);
+
+      // KPI cards (improved styling)
+      const kpiCards = metrics.map(metric => {
+        const aVal = kpiLatest('Ambuja Cements', metric);
+        const uVal = kpiLatest('UltraTech Cement', metric);
+        return (
+          <div key={metric} className="border border-gray-200 rounded-lg p-3 bg-white shadow-md min-w-[180px] hover:shadow-lg transition-shadow">
+            {company === 'Both' ? (
+              <div>
+                <div className="text-sm font-medium text-gray-900">{metric}</div>
+                <div className="flex gap-4 mt-2">
+                  <div>
+                    <div className="text-xs text-gray-500">Ambuja</div>
+                    <div className="font-bold text-lg">{aVal != null ? aVal.toFixed(2) : '—'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">UltraTech</div>
+                    <div className="font-bold text-lg">{uVal != null ? uVal.toFixed(2) : '—'}</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="text-sm font-medium text-gray-900">{metric}</div>
+                <div className="text-2xl font-bold mt-2">{kpiLatest(company, metric)?.toFixed(2) || '—'}</div>
+              </div>
+            )}
+          </div>
+        );
+      });
+
+      // Insights (improved styling)
+      const insightsSection = (
+        <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm">
+          <h4 className="text-lg font-semibold mb-3">Insights for Selected Ratios</h4>
+          {metrics.map(metric => (
+            <div key={metric} className="mb-3 text-sm">
+              <strong className="font-medium">{metric}: </strong>
+              <span className="text-gray-700">{insights[metric] || 'No insight available.'}</span>
+            </div>
+          ))}
+        </div>
+      );
+
+      // Main chart (Plotly Bar, unchanged but ensure height)
+      React.useEffect(() => {
+        const fig = { data: [], layout: { height: 560, margin: { l: 50, r: 50, b: 50, t: 50 } } };
+        if (company === 'Both') {
+          metrics.forEach(metric => {
+            ['Ambuja Cements', 'UltraTech Cement'].forEach(comp => {
+              const s = filteredData.filter(d => d.Metric === metric && d.Company === comp).sort((a, b) => a.Year - b.Year);
+              const marker = { color: metricColors[metric] };
+              if (comp === 'UltraTech Cement') marker.pattern = { shape: '/', fillmode: 'overlay', fgcolor: 'white', fgopacity: 0.3 };
+              fig.data.push({
+                x: s.map(d => d.YearLabel),
+                y: s.map(d => d.Value),
+                name: `${comp} — ${metric}`,
+                type: 'bar',
+                text: s.map(d => d.Value != null ? d.Value.toFixed(2) : '—'),
+                textposition: 'auto',
+                marker
+              });
+            });
+          });
+          fig.layout.barmode = 'group';
+          fig.layout.title = 'Comparison — grouped by metric & company';
+          fig.layout.xaxis = { title: 'Year' };
+          fig.layout.yaxis = { title: 'Value' };
+        } else {
+          metrics.forEach(metric => {
+            const s = filteredData.filter(d => d.Company === company && d.Metric === metric).sort((a, b) => a.Year - b.Year);
+            fig.data.push({
+              x: s.map(d => d.YearLabel),
+              y: s.map(d => d.Value),
+              name: metric,
+              type: 'bar',
+              text: s.map(d => d.Value != null ? d.Value.toFixed(2) : '—'),
+              textposition: 'auto',
+              marker: { color: metricColors[metric] }
+            });
+          });
+          fig.layout.barmode = 'group';
+          fig.layout.title = `${company} — ${metricGroup.charAt(0).toUpperCase() + metricGroup.slice(1)}`;
+          fig.layout.xaxis = { title: 'Year' };
+          fig.layout.yaxis = { title: 'Value' };
+        }
+        Plotly.newPlot('main-chart', fig.data, fig.layout, { displayModeBar: true });
+      }, [company, metricGroup, yearRange]);
+
+      // Sparkline (Plotly Scatter, improved margins)
+      React.useEffect(() => {
+        const primary = metrics[0];
+        const spark = { data: [], layout: { title: `Trend — ${primary}`, margin: { t: 40, b: 40, l: 40, r: 20 }, height: 280 } };
+        if (company === 'Both') {
+          ['Ambuja Cements', 'UltraTech Cement'].forEach(comp => {
+            const s = filteredData.filter(d => d.Metric === primary && d.Company === comp).sort((a, b) => a.Year - b.Year);
+            spark.data.push({
+              x: s.map(d => d.YearLabel),
+              y: s.map(d => d.Value),
+              mode: 'lines+markers',
+              name: comp,
+              line: { color: companyColors[comp], width: 2 },
+              marker: { size: 8 }
+            });
+          });
+        } else {
+          const s = filteredData.filter(d => d.Metric === primary && d.Company === company).sort((a, b) => a.Year - b.Year);
+          spark.data.push({
+            x: s.map(d => d.YearLabel),
+            y: s.map(d => d.Value),
+            mode: 'lines+markers',
+            name: company,
+            line: { color: companyColors[company], width: 2 },
+            marker: { size: 8 }
+          });
+        }
+        Plotly.newPlot('spark-chart', spark.data, spark.layout, { displayModeBar: false });
+      }, [company, metricGroup, yearRange]);
+
+      // Data table (Tabulator, with better config)
+      React.useEffect(() => {
+        const tableData = [];
+        const uniqueYears = [...new Set(filteredData.map(d => d.YearLabel))].sort();
+        uniqueYears.forEach(year => {
+          const row = { YearLabel: year };
+          metrics.forEach(metric => {
+            ['Ambuja Cements', 'UltraTech Cement'].forEach(comp => {
+              const d = filteredData.find(d => d.YearLabel === year && d.Metric === metric && d.Company === comp);
+              row[`${comp}_${metric}`] = d && d.Value != null ? d.Value.toFixed(3) : '—';
+            });
+          });
+          tableData.push(row);
+        });
+        new Tabulator('#data-table', {
+          data: tableData,
+          layout: 'fitColumns',
+          height: 200,
+          columns: [
+            { title: 'Year', field: 'YearLabel', hozAlign: 'center', headerHozAlign: 'center' },
+            ...metrics.flatMap(metric => [
+              { title: `Ambuja ${metric}`, field: `Ambuja Cements_${metric}`, hozAlign: 'right' },
+              { title: `UltraTech ${metric}`, field: `UltraTech Cement_${metric}`, hozAlign: 'right' }
+            ])
+          ],
+          rowFormatter: row => {
+            const el = row.getElement();
+            el.style.backgroundColor = '#f9fafb';
+          }
+        });
+      }, [company, metricGroup, yearRange]);
+
+      return (
+        <div className="bg-white shadow-xl rounded-lg p-6">
+          <h2 className="text-2xl font-bold text-gray-900">Financial Dashboard — Ambuja Cements vs UltraTech Cement</h2>
+          <div className="text-sm text-gray-600 mt-1">Compare liquidity, profitability, leverage, and turnover metrics (Mar-21 → Mar-25).</div>
+          <div className="flex gap-4 items-end mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Company</label>
+              <select
+                className="select mt-1 block w-[260px] rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={company}
+                onChange={e => setCompany(e.target.value)}
+              >
+                <option value="Ambuja Cements">Ambuja Cements</option>
+                <option value="UltraTech Cement">UltraTech Cement</option>
+                <option value="Both">Both Companies</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Metric group</label>
+              <select
+                className="select mt-1 block w-[260px] rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={metricGroup}
+                onChange={e => setMetricGroup(e.target.value)}
+              >
+                <option value="liquidity">Liquidity Ratios</option>
+                <option value="profitability">Profitability Ratios</option>
+                <option value="leverage">Leverage Ratios</option>
+                <option value="turnover">Turnover Ratios</option>
+              </select>
+            </div>
+            <div className="min-w-[280px]">
+              <label className="block text-sm font-medium text-gray-700">Year range</label>
+              <div ref={sliderRef} className="mt-2"></div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-4 mt-6">{kpiCards}</div>
+          {insightsSection}
+          <div className="flex gap-6 mt-6">
+            <div className="flex-1 min-w-[640px] bg-white rounded-lg shadow-md p-4">
+              <div id="main-chart" className="w-full"></div>
+            </div>
+            <div className="w-[360px] bg-white rounded-lg shadow-md p-4">
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">Mini-trend & data</h4>
+              <div id="spark-chart" className="w-full mb-5"></div>
+              <div id="data-table" className="w-full overflow-auto"></div>
+            </div>
+          </div>
+          <div className="mt-4 text-xs text-gray-500">
+            Data source: user-provided values (Mar-21 → Mar-25).
+          </div>
+        </div>
+      );
+    }
+
+    // Render
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
